@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import Transaction from '../models/Transaction';
 
 interface CreateTransactionDTO {
@@ -24,22 +25,30 @@ class TransactionsRepository {
   }
 
   public getBalance(): Balance {
-    const income = this.transactions.reduce((soma, transaction) => {
-      if (transaction.type === 'income') return soma + transaction.value;
-      return soma;
-    }, 0);
+    const balance = this.transactions.reduce(
+      (soma: Balance, transaction: Transaction) => {
+        switch (transaction.type) {
+          case 'income':
+            // eslint-disable-next-line no-param-reassign
+            soma.income += transaction.value;
+            break;
+          case 'outcome':
+            soma.outcome += transaction.value;
+            break;
+          default:
+            break;
+        }
 
-    const outcome = this.transactions.reduce((soma, transaction) => {
-      if (transaction.type === 'outcome') return soma + transaction.value;
-      return soma;
-    }, 0);
+        return soma;
+      },
+      {
+        income: 0,
+        outcome: 0,
+        total: 0,
+      },
+    );
 
-    const total = income - outcome;
-    const balance: Balance = {
-      income,
-      outcome,
-      total,
-    };
+    balance.total = balance.income - balance.outcome;
 
     return balance;
   }
